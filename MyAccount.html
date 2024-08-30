@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRIS - Appointments Features</title>
+    <link rel="icon" href="Stan.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #fefefe;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 40px;
+            background-color: #fff;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        header .logo img {
+            width: 100px;
+            height: auto;
+        }
+
+        header nav {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        header nav a {
+            margin: 0 15px;
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        header nav a:hover {
+            color: #f09d54;
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .menu-toggle div {
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            margin: 5px 0;
+            transition: 0.4s;
+        }
+
+        .logout {
+            position: absolute;
+            right: 40px;
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .logout:hover {
+            color: #f09d54;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 10px 20px;
+            }
+
+            .menu {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .menu.active {
+                display: flex;
+            }
+
+            header nav {
+                flex: none;
+                text-align: left;
+            }
+
+            header nav a {
+                margin: 10px 0;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                width: 100%;
+                text-align: left;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .logout {
+                position: static;
+                margin-left: auto;
+            }
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 200px;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-right: 1px solid #ddd;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 10px;
+            background-color: #fff;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #f09d54;
+            color: #fff;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px 20px;
+            text-align: left;
+        }
+
+        .content h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #f05454;
+            border-bottom: 2px solid #f09d54;
+            padding-bottom: 10px;
+        }
+
+        .word-document {
+            border: 1px solid #ddd;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: -70px;
+        }
+
+        ul.checklist {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li {
+            margin-bottom: 10px;
+            font-size: 16px;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        ul.checklist li::before {
+            content: "✔";
+            color: green;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .video-button {
+            display: inline-block;
+            margin-top: -70px;
+            margin-bottom: 100px;
+            margin-left: 10px;
+            padding: 5px 15px;
+            background-color: transparent;
+            color: #f05454;
+            border: 2px solid #f05454;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .video-button:hover {
+            background-color: #f09d54;
+            color: white;
+            border-color: #f09d54;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+        }
+
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 40px;
+            background-color: #444;
+            color: white;
+            margin-top: auto;
+            width: 100%; 
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="SO.png" alt="Logo">
+        </div>
+        <nav class="menu">
+            <a href="Home.html">Home</a>
+            <a href="Home.html">Known Issues</a>
+            <a href="Home.html">Planned Updates</a>
+            <a href="Home.html">Report an Issue</a>
+        </nav>
+        <a href="index.html" class="logout">Logout</a>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <ul>
+                <li><a href="#" data-article="How to Enroll">How to Enroll</a></li>
+                <li><a href="#" data-article="How to Login">How to Login</a></li>
+                <li><a href="#" data-article="Forgot Password/Account Locked">Forgot Password/Account Locked</a></li>
+                <li><a href="#" data-article="Account Profile">Account Profile</a></li>
+                <li><a href="#" data-article="Appointments">Appointments</a></li>
+                <li><a href="#" data-article="Prescriptions">Prescriptions</a></li>
+                <li><a href="#" data-article="Medical Form">Medical Form</a></li>
+                <li><a href="#" data-article="Examination Summary">Examination Summary</a></li>
+                <li><a href="#" data-article="Order History">Order History</a></li>
+                <li><a href="#" data-article="Favorites">Favorites</a></li>
+                <li><a href="#" data-article="Loyalty Club">Loyalty Club</a></li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2 id="documentTitle">Customer Experience</h2>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                <button id="BookButton" class="video-button" data-video="/IRIS Sefl-Service/Appointments/ScheduleAppt.mp4">Watch Tutorial</button>
+                <button id="RescheduleButton" class="video-button" style="display:none;" data-video="/IRIS Sefl-Service/Appointments/Rescheduled.mp4">Watch Tutorial</button>
+                <button id="CancelButton" class="video-button" style="display:none;" data-video="/IRIS Sefl-Service/Appointments/Cancellation.mp4">Watch Tutorial</button>
+                <button id="CheckInButton" class="video-button" style="display:none;" data-video="checkin.mp4">Watch Tutorial</button>
+                <button id="PendingRescheduleButton" class="video-button" style="display:none;" data-video="pending_reschedule.mp4">Watch Tutorial</button>
+            </div>
+            <div id="wordDocument" class="word-document">
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>2024 IRIS Launch</p>
+    </footer>
+
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <video id="tutorialVideo" controls>
+                <source src="/IRIS Sefl-Service/Appointments/ScheduleAppt.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <script>
+        const links = document.querySelectorAll('.sidebar ul li a');
+        const documentTitle = document.getElementById('documentTitle');
+        const wordDocument = document.getElementById('wordDocument');
+        const videoButtons = {
+            "How to Enroll": null,
+            "How to Login": null,
+            "Forgot Password/Account Locked": null,
+            "Account Profile": null,
+            "Appointments": null,
+            "Prescriptions": null,
+            "Medical Form": null,
+            "Examination Summary": null,
+            "Order History": null,
+            "Favorites": null,
+            "Loyalty Club": null
+        };
+
+        function populateContent(section) {
+            documentTitle.textContent = section.replace(/-/g, ' ');
+
+            Object.values(videoButtons).forEach(button => {
+                if (button) button.style.display = 'none';
+            });
+
+            switch(section) {
+                case "How to Enroll":
+                    wordDocument.innerHTML = `
+                        <p>This section guides you on how to enroll:</p>
+                        <ul class="checklist">
+                            <li>Visit the website at <a href="https://www.stantonoptical.com">www.stantonoptical.com</a></li>
+                            <li>Look for the options "MyAccount" in the bar menu and click "create a new account"</li>
+                            <li>Enter your personal details such as name, email, and phone number</li>
+                            <li>You will receive a verification code to your phone number</li>
+                            <li>Choose password and confirm password</li>
+                            <li>Click the "Enroll" button</li>
+                        </ul>
+                    `;
+                    break;
+                case "How to Login":
+                    wordDocument.innerHTML = `
+                        <p>This section guides you on how to login:</p>
+                        <ul class="checklist">
+                            <li>Go to the login page at <a href="https://www.stantonoptical.com">www.stantonoptical.com</a></li>
+                            <li>Look for the options "MyAccount" in the bar menu</li>   
+                            <li>Enter your registered email address</li>
+                            <li>Enter your password</li>
+                            <li>Click the "Login" button</li>
+                            <li>If successful, you will be redirected to your account dashboard</li>
+                            <li>If you encounter issues, ensure your email and password are correct</li>
+                        </ul>
+                    `;
+                    break;
+                case "Forgot Password/Account Locked":
+                    wordDocument.innerHTML = `
+                        <p>This section helps you if you forgot your password or your account is locked:</p>
+                        <ul class="checklist">
+                            <li>Go to the login page at <a href="https://www.stantonoptical.com">www.stantonoptical.com</a></li>
+                            <li>Look for the options "MyAccount" in the bar menu</li>   
+                            <li>Click on the "Forgot Password" link</li>
+                            <li>Enter your registered phone number</li>
+                            <li>You will receive a verification code to reset your password</li>
+                            <li>If you do not receive a verification code, contact support</li>
+                        </ul>
+                    `;
+                    break;
+                case "Account Profile":
+                    wordDocument.innerHTML = `
+                        <p>This section provides an overview of your account, where you can:</p>
+                        <ul class="checklist">
+                            <li>Edit personal information such as email, phone number, and address</li>
+                            <li>View credit amounts received</li>
+                            <li>Check the completion percentage of your profile</li>
+                            <li>Manage your communication preferences (email and SMS)</li>
+                            <li>Review relationships linked to your profile, such as child or parent profiles</li>
+                        </ul>
+                    `;
+                    break;
+                case "Appointments":
+                    wordDocument.innerHTML = `
+                        <p>This section provides a summary of all your appointments:</p>
+                        <ul class="checklist">
+                            <li>View both past and upcoming appointments</li>
+                            <li>See detailed information for each appointment</li>
+                            <li>Take actions like modifying the appointment date</li>
+                        </ul>
+                    `;
+                    break;
+                case "Prescriptions":
+                    wordDocument.innerHTML = `
+                        <p>This section provides an overview of all your prescriptions:</p>
+                        <ul class="checklist">
+                            <li>View inside and outside prescriptions</li>
+                            <li>Check key details like expiration dates and type</li>
+                            <li>Take actions such as printing prescriptions</li>
+                            <li>Add new prescriptions for glasses or contact lenses</li>
+                        </ul>
+                    `;
+                    break;
+                case "Medical Form":
+                    wordDocument.innerHTML = `
+                        <p>In this section, you can:</p>
+                        <ul class="checklist">
+                            <li>Submit your intake form before your appointment</li>
+                            <li>Speed up your visit by completing forms in advance</li>
+                        </ul>
+                    `;
+                    break;
+                case "Examination Summary":
+                    wordDocument.innerHTML = `
+                        <p>This section provides a summary of your examinations:</p>
+                        <ul class="checklist">
+                            <li>View details of examinations performed during your appointments</li>
+                            <li>Print summaries for your personal records</li>
+                        </ul>
+                    `;
+                    break;
+                case "Order History":
+                    wordDocument.innerHTML = `
+                        <p>In this section, you can:</p>
+                        <ul class="checklist">
+                            <li>View all orders you've placed with us</li>
+                            <li>See detailed receipts for each order</li>
+                            <li>Place a new order by browsing frames or contacts</li>
+                            <li>Reorder a previous purchase</li>
+                        </ul>
+                    `;
+                    break;
+                case "Favorites":
+                    wordDocument.innerHTML = `
+                        <p>This section displays all products you have marked as favorites:</p>
+                        <ul class="checklist">
+                            <li>Browse and reorder your favorite frames or contacts</li>
+                        </ul>
+                    `;
+                    break;
+                case "Loyalty Club":
+                    wordDocument.innerHTML = `
+                        <p>This section showcases your loyalty club benefits:</p>
+                        <ul class="checklist">
+                            <li>Frame Club: View acquisition dates, total available and redeemed credits</li>
+                            <li>Contacts Club: Manage your contacts club benefits</li>
+                            <li>Refer-a-Friend program: Track your referrals and benefits</li>
+                            <li>Eyewear Protection Plan: Check your warranty status and expiration</li>
+                        </ul>
+                    `;
+                    break;
+                default:
+                    wordDocument.innerHTML = `<h3>${section.replace(/-/g, ' ')}</h3><p>Content for ${section.replace(/-/g, ' ')} is not available.</p>`;
+                    break;
+            }
+        }
+
+        populateContent("How to Enroll");
+
+        links.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const selectedSection = this.getAttribute('data-article');
+                populateContent(selectedSection);
+            });
+        });
+
+        const modal = document.getElementById('videoModal');
+        const videoElement = document.getElementById('tutorialVideo');
+        const closeButton = document.querySelector('.close-button');
+
+        Object.values(videoButtons).forEach(button => {
+            if (button) {
+                button.addEventListener('click', function() {
+                    const videoSrc = this.getAttribute('data-video');
+                    videoElement.querySelector('source').src = videoSrc;
+                    videoElement.load();
+                    modal.style.display = 'flex';
+                    videoElement.play();
+                });
+            }
+        });
+
+        closeButton.addEventListener('click', function() {
+            modal.style.display = 'none';
+            videoElement.pause();
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                videoElement.pause();
+            }
+        });
+    </script>
+</body>
+</html>
